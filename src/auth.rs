@@ -5,7 +5,6 @@ use jsonwebtoken::{encode, decode, Header, Algorithm, EncodingKey, DecodingKey, 
 use std::fmt;
 use warp::{filters::header::headers_cloned, http::header::{HeaderMap, HeaderValue, AUTHORIZATION}, reject, Rejection, Filter};
 
-use crate::WebResult;
 
 const BEARER: &str = "Bearer";
 const JWT_SECRET: &[u8] = b"secret";
@@ -19,9 +18,8 @@ pub enum Role{
 impl Role{
     pub fn from_str(role: &str) -> Role{
         match role{
-            "user" => Role::User,
-            "admin" => Role::Admin,
-            _ => None,
+            "Admin" => Role::Admin,
+            _ => Role::User,
         }
     }
 }
@@ -76,10 +74,10 @@ async fn authorize((role, headers): (Role, HeaderMap<HeaderValue>)) -> WebResult
     }
 }
 
-fn jwt_from_header(headers: &HeaderMap<HeaderValue>) -> Result<String, Rejection>{
+fn jwt_from_header(headers: &HeaderMap<HeaderValue>) -> Result<String>{
     let header = match headers.get(AUTHORIZATION){
         Some(header) => header,
-        None => Err(Error::NoAuthHeaderError),
+        None => return Err(Error::NoAuthHeaderError),
     };
 
     let auth_header = match std::str::from_utf8(header.as_bytes()){

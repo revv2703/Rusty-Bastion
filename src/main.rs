@@ -1,7 +1,7 @@
 use auth::{with_auth, Role};
 use error::Error::*;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap, convert::Infallible, sync::Arc};
 use warp::{reject, reply, Filter, Rejection, Reply};
 
 mod auth;
@@ -36,8 +36,8 @@ async fn main(){
 
     let login_route = warp::path!("login")
         .and(warp::post())
-        .and(warp::body::json())
         .and(with_users(users.clone()))
+        .and(warp::body::json())
         .and_then(login_handler);
 
         let user_route = warp::path!("user")
@@ -64,7 +64,7 @@ pub async fn login_handler(users: Users, body: LoginRequest) -> WebResult<impl R
         .find(|(_uid, user)| user.email == body.email && user.password == body.password){
             Some((uid, user)) => {
                 let token = auth::create_token(&uid, &Role::from_str(&user.role))
-                    .map_err(|_| reject::custom(AuthError))?;
+                    .map_err(|e| reject::custom(e))?;
                 Ok(reply::json(&LoginResponse { token }))
             }
             None => Err(reject::custom(WrongCredentialsError)),
