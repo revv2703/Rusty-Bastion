@@ -42,7 +42,7 @@ async fn main(){
 
         let user_route = warp::path!("user")
             .and(with_auth(Role::User))
-            .and_then(user_handler)
+            .and_then(user_handler);
 
         let admin_route = warp::path!("admin")
             .and(with_auth(Role::Admin))
